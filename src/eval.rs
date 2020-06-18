@@ -17,7 +17,7 @@ impl Environment {
     }
 
     pub fn eval(&self, expression: Rc<Expression>) -> Rc<Expression> {
-        println!("\n[EXPRESSION] {:#?}", expression);
+        println!("\n[EXPRESSION] {:?}", expression);
 
         match expression.borrow() {
             Expression { atom, car: _, cdr: _ } if (atom.is_some()) => {
@@ -28,7 +28,7 @@ impl Environment {
                 Rc::new(Expression { ..Default::default() })
             }
 
-            Expression { car, atom: _, cdr: _ } if (Environment::car(expression.clone()).is_some())
+            _parse_atom if (Environment::car(expression.clone()).is_some())
                 && Environment::car(expression.clone()).unwrap().atom.is_some() => {
                 //
                 let atom = Environment::car(expression.clone());

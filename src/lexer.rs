@@ -19,7 +19,9 @@ pub enum TokenType {
     TokenNewLine,
 }
 
-pub struct Builtins {}
+pub struct Builtins {
+    //
+}
 
 impl Builtins {
     pub fn new() -> HashMap<String, Token> {
@@ -50,7 +52,7 @@ impl Lexer {
         Lexer { buf, peek: None, accum_buf: Vec::new(), builtins: Builtins::new() }
     }
 
-    pub fn next<'a>(&mut self) -> Result<Token, GenericError> {
+    pub fn next(&mut self) -> Result<Token, GenericError> {
         loop {
             let text = match self.next_chr() {
                 Some(c) => c,
@@ -59,9 +61,10 @@ impl Lexer {
 
             match text.as_str() {
                 s if is_space(s) => continue,
+                c if c == ";" && self.skip_comment(c) => continue,
+                //
                 n if is_number(n) => return self.make_number(n),
                 a if is_alphanumeric(a) || a == "#" => return self.make_atom_or_const(a),
-                c if c == ";" => { self.skip_comment(c); continue; }
                 //
                 "\"" => return self.make_string(),
                 "(" => return make_token(TokenType::TokenLPar, text),
@@ -89,9 +92,10 @@ impl Lexer {
         self.peek
     }
 
-    fn skip_comment(&mut self, first_char: &str) {
+    fn skip_comment(&mut self, first_char: &str) -> bool {
         self.accumulate(first_char, |c| { c != "\n" && c != "\r" });
         self.accum_buf.clear();
+        true
     }
 
     fn make_number(&mut self, first_char: &str) -> Result<Token, GenericError> {
@@ -137,13 +141,8 @@ impl Lexer {
         loop {
             match chr_to_str(self.peek()) {
                 None => break,
-                Some(next) => {
-                    if !predicate(next.as_str()) {
-                        break;
-                    }
-
-                    self.accum_buf.extend(next.bytes())
-                }
+                Some(next) if !predicate(next.as_str()) => break,
+                Some(next) => self.accum_buf.extend(next.bytes())
             }
         }
     }
@@ -159,15 +158,7 @@ pub fn make_token<'a>(typ_: TokenType, text: String) -> Result<Token, GenericErr
 }
 
 fn chr_to_str(chr: Option<u8>) -> Option<String> {
-    match chr {
-        None => None,
-        Some(chr) => {
-            return match from_utf8(&vec![chr]) {
-                Err(_) => panic!("unexpected character {}", chr),
-                Ok(t) => Some(t.to_string()),
-            };
-        }
-    }
+    chr.map(|c| (c as char).to_string())
 }
 
 fn is_space(chr: &str) -> bool {

@@ -15,12 +15,15 @@ fn main() -> Result<(), GenericError> {
     let mut f = File::open("./test/hello.sch")?;
     let mut buffer = Vec::new();
 
-    // move this part to parser
     f.read_to_end(&mut buffer)?;
     let mut parser = Parser::new(VecDeque::from(buffer));
     let environment = Environment::new();
 
     loop {
+        // let mut inp = String::new();
+        // io::stdin().read_line(&mut inp).expect("cannot read user input.");
+        // let mut parser = Parser::new(VecDeque::from(inp.into_bytes()));
+
         let expr = parser.list();
         if expr.is_empty() {
             break;
